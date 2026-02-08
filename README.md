@@ -54,11 +54,17 @@ git clone  https://github.com/jahanzaibmir/ShieldX
 
 cd ShieldX
 
+cd services/misconfig/c_engine
+
 make
 
-cd gui/java/src
+cd services/zeroday/sensors/c
+
+make
 
 # Compile 
+
+cd gui/java/src
 
 javac shieldx/ui/Main.java
 
