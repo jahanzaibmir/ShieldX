@@ -19,6 +19,35 @@ Scans the system and connected network to detect open ports, exposed services, a
 Monitors system and network behavior to identify anomalies that may indicate unknown or emerging threats.
 
 
+# System Requirements
+
+- Windows 10 or newer
+
+- Git
+
+- Make
+
+- PowerShell
+
+- Java JDK 17 or newer
+
+- Python 3.10 or newer
+
+- Rust toolchain (rustc and cargo)
+
+- GCC or MinGW-w64
+
+- Administrator privileges for some modules
+
+- Pyhton Requirements ; 
+
+requests
+scapy
+psutil
+colorama
+pyyaml
+
+
 # How to set up
 
 git clone  https://github.com/jahanzaibmir/ShieldX
