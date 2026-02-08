@@ -5,7 +5,7 @@ It focuses on visibility, misconfiguration awareness, and early threat detection
 
 The tool is designed for learning, research, and defensive security testing.
 
-#Modules
+# Modules
  - Phishing Link Detection
 
 Analyzes URLs to identify suspicious or potentially malicious links commonly used in phishing attacks.
@@ -18,7 +18,7 @@ Scans the system and connected network to detect open ports, exposed services, a
 
 Monitors system and network behavior to identify anomalies that may indicate unknown or emerging threats.
 
-#Platform
+# Platform
 
 ShieldX currently supports Windows systems.
 Some features may require administrative privileges.
