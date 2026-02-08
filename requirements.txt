@@ -1,0 +1,24 @@
+Windows 10 or newer
+
+Git
+
+Make
+
+PowerShell
+
+Java JDK 17 or newer
+
+Python 3.10 or newer
+
+Rust toolchain (rustc and cargo)
+
+GCC or MinGW-w64
+
+Administrator privileges for some modules
+
+Pyhthon Requirements : 
+requests
+scapy
+psutil
+colorama
+pyyaml
