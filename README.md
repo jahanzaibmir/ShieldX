@@ -18,7 +18,37 @@ Scans the system and connected network to detect open ports, exposed services, a
 
 Monitors system and network behavior to identify anomalies that may indicate unknown or emerging threats.
 
-# Platform
+
+# How to set up
+
+git clone  https://github.com/jahanzaibmir/ShieldX
+
+cd ShieldX
+
+make
+
+cd gui/java/src
+
+# Compile 
+
+javac shieldx/ui/Main.java
+
+# Run it
+
+java shieldx.ui.Main
+
+# Platform Support
 
 ShieldX currently supports Windows systems.
 Some features may require administrative privileges.
+
+
+# Project Status
+
+ShieldX is under active development. I drop the daily updates to make it upto date and you satisfied
+
+# Author
+
+Developed by Jahanzaib Ashraf Mir 
+Built with curiosity, frustration, and a desire to safegaurd systems from outside attacks.
+
