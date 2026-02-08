@@ -1,0 +1,9 @@
+logs/
+__pycache__/
+*.pyc
+*.exe
+*.class
+target/
+bin/
+dist/
+.env
