@@ -2,15 +2,17 @@ package shieldx.ui;
 
 import javax.swing.*;
 import javax.swing.text.*;
+import javax.swing.text.JTextComponent;
 import java.awt.*;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.File;
+import java.net.URI;
 
 public class Main {
 
-    // ===== COLORS =====
     static final Color BG_MAIN = new Color(0x0D1117);
     static final Color BG_PANEL = new Color(0x161B22);
     static final Color ACCENT = new Color(0x00E5FF);
@@ -27,7 +29,7 @@ public class Main {
     }
 
     static void createUI() {
-        JFrame frame = new JFrame("ShieldX • Cyber Defense Platform");
+        JFrame frame = new JFrame("ShieldX \"A Cyber Defense Platform\"");
         frame.setSize(1300, 800);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
@@ -35,11 +37,42 @@ public class Main {
 
         JMenuBar bar = new JMenuBar();
         bar.setBackground(BG_PANEL);
-        for (String name : new String[]{"File", "View", "Tools", "Help"}) {
-            JMenu m = new JMenu(name);
+
+        JMenu file = new JMenu("File");
+        JMenuItem exit = new JMenuItem("Exit");
+        exit.addActionListener(e -> System.exit(0));
+        file.add(exit);
+
+        JMenu view = new JMenu("View");
+        JMenuItem clearLogs = new JMenuItem("Clear Logs");
+        clearLogs.addActionListener(e -> logPane.setText(""));
+        view.add(clearLogs);
+
+        JMenu tools = new JMenu("Tools");
+        JMenuItem phishing = new JMenuItem("Phishing");
+        phishing.addActionListener(e -> phishingUI());
+        JMenuItem misconfig = new JMenuItem("Misconfig");
+        misconfig.addActionListener(e -> misconfigUI());
+        tools.add(phishing);
+        tools.add(misconfig);
+
+        JMenu help = new JMenu("Help");
+        JMenuItem about = new JMenuItem("About ShieldX");
+        about.addActionListener(e ->
+                JOptionPane.showMessageDialog(
+                        frame,
+                        "ShieldX\n An Enterprise SOC Platform\nVersion 1.0\n 2026\n Developed By JAHANZAIB ASHRAF MIR",
+                        "About ShieldX",
+                        JOptionPane.INFORMATION_MESSAGE
+                )
+        );
+        help.add(about);
+
+        for (JMenu m : new JMenu[]{file, view, tools, help}) {
             m.setForeground(Color.WHITE);
             bar.add(m);
         }
+
         frame.setJMenuBar(bar);
 
         JPanel sidebar = new JPanel(new GridLayout(5, 1, 10, 10));
@@ -79,7 +112,6 @@ public class Main {
         return btn;
     }
 
-    // ===== PHISHING UI =====
     static void phishingUI() {
         topPanel.removeAll();
         topPanel.setLayout(new BorderLayout(20, 20));
@@ -95,6 +127,9 @@ public class Main {
         urlField.setCaretColor(Color.WHITE);
         urlField.setFont(new Font("Inter", Font.PLAIN, 16));
         urlField.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+
+        // Right-click paste / copy support
+        attachContextMenu(urlField);
 
         urlField.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent e) {
@@ -116,6 +151,7 @@ public class Main {
         output.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
         output.setBackground(new Color(10, 14, 18));
         output.setForeground(Color.WHITE);
+        attachContextMenu(output);
 
         JButton scanBtn = new JButton("Run Scan");
         scanBtn.setBackground(ACCENT);
@@ -133,7 +169,8 @@ public class Main {
         topPanel.repaint();
     }
 
-    // ===== MISCONFIG UI =====
+    // ---- REST OF FILE UNCHANGED BELOW ----
+
     static void misconfigUI() {
         topPanel.removeAll();
         topPanel.setLayout(new BorderLayout(20, 20));
@@ -148,6 +185,7 @@ public class Main {
         output.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
         output.setBackground(new Color(10, 14, 18));
         output.setForeground(Color.WHITE);
+        attachContextMenu(output);
 
         JButton scanBtn = new JButton("Run Scan");
         scanBtn.setBackground(ACCENT);
@@ -164,7 +202,6 @@ public class Main {
         topPanel.repaint();
     }
 
-    // ===== RUN MISCONFIG =====
     static void runMisconfigScan(JTextArea output) {
         log("INFO", "Running Misconfig scan...");
         output.setText("");
@@ -196,16 +233,41 @@ public class Main {
         }).start();
     }
 
-    // ===== PHISHING RUNNER =====
     static void runPhishingScan(String url, JTextArea output) {
         if (url.isBlank() || url.equals("Paste the link here")) {
             log("ERROR", "No URL provided");
             return;
         }
+
         log("INFO", "Running phishing scan...");
+        output.setText("");
+
+        new Thread(() -> {
+            try {
+                ProcessBuilder pb = new ProcessBuilder("python", "checker.py", url);
+                pb.directory(new File("C:\\ShieldX\\services\\phishing"));
+                pb.redirectErrorStream(true);
+
+                Process p = pb.start();
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(p.getInputStream())
+                );
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String l = line;
+                    SwingUtilities.invokeLater(() -> output.append(l + "\n"));
+                }
+
+                p.waitFor();
+                log("SUCCESS", "Phishing scan completed");
+
+            } catch (Exception ex) {
+                log("ERROR", ex.getMessage());
+            }
+        }).start();
     }
 
-    // ===== LOG PANEL =====
     static JPanel logPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(BG_PANEL);
@@ -214,6 +276,7 @@ public class Main {
         logPane.setEditable(false);
         logPane.setBackground(new Color(10, 14, 18));
         logPane.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
+        attachContextMenu(logPane);
 
         JScrollPane scroll = new JScrollPane(logPane);
 
@@ -227,6 +290,36 @@ public class Main {
         panel.add(top, BorderLayout.NORTH);
         panel.add(scroll, BorderLayout.CENTER);
         return panel;
+    }
+
+    static void attachContextMenu(JTextComponent c) {
+        JPopupMenu menu = new JPopupMenu();
+
+        JMenuItem paste = new JMenuItem("Paste");
+        paste.addActionListener(e -> c.paste());
+
+        JMenuItem copy = new JMenuItem("Copy");
+        copy.addActionListener(e -> c.copy());
+
+        JMenuItem selectAll = new JMenuItem("Select All");
+        selectAll.addActionListener(e -> c.selectAll());
+
+        JMenuItem open = new JMenuItem("Open URL");
+        open.addActionListener(e -> {
+            try {
+                String t = c.getSelectedText();
+                if (t != null && t.startsWith("http"))
+                    Desktop.getDesktop().browse(new URI(t.trim()));
+            } catch (Exception ignored) {}
+        });
+
+        menu.add(paste);
+        menu.add(copy);
+        menu.add(selectAll);
+        menu.addSeparator();
+        menu.add(open);
+
+        c.setComponentPopupMenu(menu);
     }
 
     static void log(String type, String msg) {
