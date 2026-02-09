@@ -1,17 +1,23 @@
 from urllib.parse import urlparse
 
-def normalize_url(url: str) -> str | None:
-    if not url:
+def normalize_url(raw: str) -> str | None:
+    if not raw:
         return None
 
-    url = url.strip()
+    raw = raw.strip()
 
-    if "://" not in url:
-        url = "http://" + url
+    if raw.startswith(("http://", "https://")):
+        parsed = urlparse(raw)
+        if not parsed.hostname:
+            return None
+        return parsed.geturl()
 
-    parsed = urlparse(url)
+    parsed = urlparse("https://" + raw)
+    if parsed.hostname:
+        return parsed.geturl()
 
-    if not parsed.scheme or not parsed.netloc:
-        return None
+    parsed = urlparse("http://" + raw)
+    if parsed.hostname:
+        return parsed.geturl()
 
-    return f"{parsed.scheme}://{parsed.netloc}"
+    return None
