@@ -52,8 +52,6 @@ pyyaml
 
 git clone  https://github.com/jahanzaibmir/ShieldX
 
-cd ShieldX
-
 cd services/misconfig/c_engine
 
 make
