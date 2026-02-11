@@ -46,7 +46,7 @@ scapy
 psutil
 colorama
 pyyaml
-
+pyhton-whois
 
 # How to set up
 
