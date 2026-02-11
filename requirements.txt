@@ -22,3 +22,4 @@ scapy
 psutil
 colorama
 pyyaml
+pyhton-whois
