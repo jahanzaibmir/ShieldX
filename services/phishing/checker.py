@@ -1,19 +1,14 @@
 import socket
-import json
-import logging
 from urllib.parse import urlparse
+from datetime import datetime, timezone
 
-from .normalize import normalize_url
-from .heuristics import analyze_heuristics
-from .domain_intel import analyze_domain
-from .tls_check import analyze_tls
-from .verdict import finalize_verdict
+from normalize import normalize_url
+from heuristics import analyze_heuristics
+from domain_intel import analyze_domain
+from tls_check import analyze_tls
+from verdict import finalize_verdict
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s | %(levelname)s | phishing | %(message)s"
-)
-logger = logging.getLogger("phishing")
+ENGINE_NAME = "ShieldX Phishing Engine"
 
 
 def domain_resolves(domain: str) -> bool:
@@ -25,52 +20,75 @@ def domain_resolves(domain: str) -> bool:
 
 
 def check_url(raw_url: str) -> dict:
-    logger.info(f"Starting phishing scan for URL: {raw_url}")
-
     result = {
-        "url": raw_url,
-        "normalized": None,
-        "score": 0,
-        "verdict": None,
-        "details": []
+        "engine": ENGINE_NAME,
+        "scan_time": datetime.now(timezone.utc).isoformat(),
+        "input_url": raw_url,
+        "normalized_url": None,
+        "risk_score": 0,
+        "verdict": "UNKNOWN",
+        "signals": []
     }
 
     normalized = normalize_url(raw_url)
     if not normalized:
-        result["score"] = 100
+        result["risk_score"] = 100
         result["verdict"] = "INVALID"
-        result["details"].append("[URL] Invalid URL format")
+        result["signals"].append("Invalid URL format")
         return result
 
-    result["normalized"] = normalized
+    result["normalized_url"] = normalized
     parsed = urlparse(normalized)
 
-    # 🔥 HARD STOP — SOC RULE
     if not domain_resolves(parsed.hostname):
-        result["score"] = 90
-        result["verdict"] = "HIGH RISK"
-        result["details"].append("[DOMAIN] Domain does not resolve (dead infrastructure)")
+        result["risk_score"] = 90
+        result["verdict"] = "HIGH_RISK"
+        result["signals"].append("Domain does not resolve")
         return result
 
     h_score, h_details = analyze_heuristics(parsed)
-    result["score"] += h_score
-    result["details"].extend(h_details)
-
     d_score, d_details = analyze_domain(parsed.hostname)
-    result["score"] += d_score
-    result["details"].extend(d_details)
-
     t_score, t_details = analyze_tls(parsed.hostname)
-    result["score"] += t_score
-    result["details"].extend(t_details)
 
-    result["verdict"] = finalize_verdict(result["score"])
+    result["risk_score"] = h_score + d_score + t_score
+    result["signals"].extend(h_details + d_details + t_details)
+    result["verdict"] = finalize_verdict(result["risk_score"])
 
-    logger.info(f"Phishing scan result: {result}")
     return result
+
+
+def render_output(res: dict) -> str:
+    sep = "-" * 70
+    lines = []
+
+    lines.append(sep)
+    lines.append(" ShieldX SOC - Phishing Analysis Report")
+    lines.append(sep)
+    lines.append(f" Engine        : {res['engine']}")
+    lines.append(f" Scan Time     : {res['scan_time']}")
+    lines.append(f" Input URL     : {res['input_url']}")
+    lines.append(f" Normalized    : {res['normalized_url']}")
+    lines.append("")
+    lines.append(f" Risk Score    : {res['risk_score']}/100")
+    lines.append(f" Verdict       : {res['verdict']}")
+    lines.append("")
+    lines.append(" Signals:")
+    if res["signals"]:
+        for s in res["signals"]:
+            lines.append(f"  - {s}")
+    else:
+        lines.append("  - No malicious indicators detected")
+    lines.append(sep)
+
+    return "\n".join(lines)
 
 
 if __name__ == "__main__":
     import sys
-    res = check_url(sys.argv[1])
-    print(json.dumps(res, indent=2))
+
+    if len(sys.argv) != 2:
+        print("Usage: python checker.py <url>")
+        sys.exit(1)
+
+    report = check_url(sys.argv[1])
+    print(render_output(report))
