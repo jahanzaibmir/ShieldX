@@ -14,10 +14,6 @@ Analyzes URLs to identify suspicious or potentially malicious links commonly use
 
 Scans the system and connected network to detect open ports, exposed services, and insecure configurations that increase attack surface.
 
- - Zero-Day Threat Detection
-
-Monitors system and network behavior to identify anomalies that may indicate unknown or emerging threats.
-
 
 # System Requirements
 
