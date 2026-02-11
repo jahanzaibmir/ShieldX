@@ -52,13 +52,7 @@ pyhton-whois
 
 git clone  https://github.com/jahanzaibmir/ShieldX
 
-cd services/misconfig/c_engine
-
-make
-
-cd services/zeroday/sensors/c
-
-make
+cd ShieldX/
 
 # Compile 
 
