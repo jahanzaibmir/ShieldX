@@ -47,15 +47,19 @@ pyhton-whois
 git clone  https://github.com/jahanzaibmir/ShieldX
 
 # Compile 
-(RUST)
+
+-(RUST)
 cd ShieldX/services/misconfig/engine
+
 make
 
-(c)
+-(C)
 cd ShieldX/services/misconfig/collectors/c
+
 make
 
-(UI)
+-(UI)
+
 cd ShieldX/gui/java/src
 
 javac shieldx/ui/Main.java
