@@ -10,6 +10,8 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.File;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
 
@@ -112,6 +114,7 @@ public class Main {
         return btn;
     }
 
+    // ---------------- PHISHING PANEL ----------------
     static void phishingUI() {
         topPanel.removeAll();
         topPanel.setLayout(new BorderLayout(20, 20));
@@ -127,8 +130,6 @@ public class Main {
         urlField.setCaretColor(Color.WHITE);
         urlField.setFont(new Font("Inter", Font.PLAIN, 16));
         urlField.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
-
-        // Right-click paste / copy support
         attachContextMenu(urlField);
 
         urlField.addFocusListener(new java.awt.event.FocusAdapter() {
@@ -169,8 +170,7 @@ public class Main {
         topPanel.repaint();
     }
 
-    // ---- REST OF FILE UNCHANGED BELOW ----
-
+   // ---------------- ENHANCED MISCONFIG PANEL WITH TABS ----------------
     static void misconfigUI() {
         topPanel.removeAll();
         topPanel.setLayout(new BorderLayout(20, 20));
@@ -180,55 +180,604 @@ public class Main {
         title.setForeground(Color.WHITE);
         title.setFont(new Font("Inter", Font.BOLD, 26));
 
-        JTextArea output = new JTextArea();
-        output.setEditable(false);
-        output.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
-        output.setBackground(new Color(10, 14, 18));
-        output.setForeground(Color.WHITE);
-        attachContextMenu(output);
-
-        JButton scanBtn = new JButton("Run Scan");
+        // Interface selection panel
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        controlPanel.setBackground(BG_MAIN);
+        
+        JLabel interfaceLabel = new JLabel("Select Interface:");
+        interfaceLabel.setForeground(Color.WHITE);
+        interfaceLabel.setFont(new Font("Inter", Font.PLAIN, 14));
+        
+        JComboBox<String> interfaceCombo = new JComboBox<>();
+        interfaceCombo.setBackground(BG_PANEL);
+        interfaceCombo.setForeground(Color.WHITE);
+        interfaceCombo.setFont(new Font("Inter", Font.PLAIN, 14));
+        interfaceCombo.setPreferredSize(new Dimension(250, 30));
+        
+        JButton refreshBtn = new JButton("[Refresh]");
+        refreshBtn.setBackground(INFO);
+        refreshBtn.setForeground(Color.WHITE);
+        refreshBtn.addActionListener(e -> loadNetworkInterfaces(interfaceCombo));
+        
+        JButton scanBtn = new JButton("[Run Full Scan]");
         scanBtn.setBackground(ACCENT);
-        scanBtn.addActionListener(e -> runMisconfigScan(output));
+        scanBtn.setForeground(Color.WHITE);
+        scanBtn.setFont(new Font("Inter", Font.BOLD, 14));
+        
+        controlPanel.add(interfaceLabel);
+        controlPanel.add(interfaceCombo);
+        controlPanel.add(refreshBtn);
+        controlPanel.add(Box.createHorizontalStrut(20));
+        controlPanel.add(scanBtn);
 
-        JPanel top = new JPanel(new BorderLayout(10, 10));
-        top.setBackground(BG_MAIN);
-        top.add(title, BorderLayout.NORTH);
-        top.add(scanBtn, BorderLayout.EAST);
+        // Create tabbed pane for organized results
+        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane.setBackground(BG_MAIN);
+        tabbedPane.setForeground(Color.WHITE);
+        tabbedPane.setFont(new Font("Inter", Font.BOLD, 13));
 
-        topPanel.add(top, BorderLayout.NORTH);
-        topPanel.add(new JScrollPane(output), BorderLayout.CENTER);
+        // Tab 1: Overview / Summary
+        JTextArea overviewArea = createStyledTextArea();
+        tabbedPane.addTab("[Overview]", new JScrollPane(overviewArea));
+
+        // Tab 2: Network Interfaces
+        JTextArea interfacesArea = createStyledTextArea();
+        tabbedPane.addTab("[Interfaces]", new JScrollPane(interfacesArea));
+
+        // Tab 3: Open Ports
+        JTextArea portsArea = createStyledTextArea();
+        tabbedPane.addTab("[Open Ports]", new JScrollPane(portsArea));
+
+        // Tab 4: Active Services
+        JTextArea servicesArea = createStyledTextArea();
+        tabbedPane.addTab("[Services]", new JScrollPane(servicesArea));
+
+        // Tab 5: WiFi Security
+        JTextArea wifiArea = createStyledTextArea();
+        tabbedPane.addTab("[WiFi]", new JScrollPane(wifiArea));
+
+        // Tab 6: Connections
+        JTextArea connectionsArea = createStyledTextArea();
+        tabbedPane.addTab("[Connections]", new JScrollPane(connectionsArea));
+
+        // Tab 7: Security Findings
+        JTextArea findingsArea = createStyledTextArea();
+        tabbedPane.addTab("[Findings]", new JScrollPane(findingsArea));
+
+        // Tab 8: Raw Output
+        JTextArea rawOutputArea = createStyledTextArea();
+        tabbedPane.addTab("[Raw Output]", new JScrollPane(rawOutputArea));
+
+        // Scan button action
+        scanBtn.addActionListener(e -> {
+            String selectedInterface = (String) interfaceCombo.getSelectedItem();
+            if (selectedInterface == null || selectedInterface.isEmpty()) {
+                log("ERROR", "No interface selected");
+                JOptionPane.showMessageDialog(topPanel, 
+                    "Please select a network interface first!", 
+                    "No Interface Selected", 
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Clear all tabs
+            overviewArea.setText("Scanning...\n");
+            interfacesArea.setText("");
+            portsArea.setText("");
+            servicesArea.setText("");
+            wifiArea.setText("");
+            connectionsArea.setText("");
+            findingsArea.setText("");
+            rawOutputArea.setText("");
+            
+            // Run scan with organized output
+            runOrganizedMisconfigScan(selectedInterface, overviewArea, interfacesArea, 
+                                    portsArea, servicesArea, wifiArea, connectionsArea, 
+                                    findingsArea, rawOutputArea);
+        });
+
+        JPanel topSection = new JPanel(new BorderLayout(10, 10));
+        topSection.setBackground(BG_MAIN);
+        topSection.add(title, BorderLayout.NORTH);
+        topSection.add(controlPanel, BorderLayout.CENTER);
+
+        topPanel.add(topSection, BorderLayout.NORTH);
+        topPanel.add(tabbedPane, BorderLayout.CENTER);
         topPanel.revalidate();
         topPanel.repaint();
+        
+        // Auto-load interfaces
+        loadNetworkInterfaces(interfaceCombo);
     }
 
-    static void runMisconfigScan(JTextArea output) {
-        log("INFO", "Running Misconfig scan...");
-        output.setText("");
+    static JTextArea createStyledTextArea() {
+        JTextArea area = new JTextArea();
+        area.setEditable(false);
+        area.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
+        area.setBackground(new Color(10, 14, 18));
+        area.setForeground(Color.WHITE);
+        area.setLineWrap(false);
+        area.setWrapStyleWord(false);
+        attachContextMenu(area);
+        return area;
+    }
+
+    static void runOrganizedMisconfigScan(String selectedInterface, 
+                                         JTextArea overview, JTextArea interfaces, 
+                                         JTextArea ports, JTextArea services, 
+                                         JTextArea wifi, JTextArea connections,
+                                         JTextArea findings, JTextArea rawOutput) {
+        log("INFO", "Running organized scan on: " + selectedInterface);
 
         new Thread(() -> {
             try {
+                // First run C collector
+                ProcessBuilder collectorPb = new ProcessBuilder(
+                    "C:\\ShieldX\\services\\misconfig\\collectors\\c\\shieldx-collector.exe",
+                    "-m", "network",
+                    "-o", "C:\\ShieldX\\services\\misconfig\\engine\\state.json",
+                    "-v"
+                );
+                collectorPb.redirectErrorStream(true);
+                Process collectorP = collectorPb.start();
+                
+                BufferedReader collectorReader = new BufferedReader(
+                    new InputStreamReader(collectorP.getInputStream())
+                );
+                
+                String line;
+                StringBuilder rawData = new StringBuilder();
+                while ((line = collectorReader.readLine()) != null) {
+                    String l = line;
+                    rawData.append(l).append("\n");
+                    SwingUtilities.invokeLater(() -> rawOutput.append(l + "\n"));
+                }
+                
+                collectorP.waitFor();
+                
+                // Parse the JSON output
+                String jsonPath = "C:\\ShieldX\\services\\misconfig\\engine\\state.json";
+                String jsonContent = new String(java.nio.file.Files.readAllBytes(
+                    java.nio.file.Paths.get(jsonPath)));
+                
+                // Parse and display organized data
+                SwingUtilities.invokeLater(() -> {
+                    parseAndDisplayData(jsonContent, overview, interfaces, ports, 
+                                      services, wifi, connections, findings);
+                });
+                
+                // Run Rust engine
+                SwingUtilities.invokeLater(() -> rawOutput.append("\n--- Running Analysis Engine ---\n\n"));
+                
+                ProcessBuilder enginePb = new ProcessBuilder(
+                    "C:\\ShieldX\\services\\misconfig\\engine\\target\\release\\shieldx-engine.exe",
+                    jsonPath
+                );
+                enginePb.redirectErrorStream(true);
+                Process engineP = enginePb.start();
+
+                BufferedReader engineReader = new BufferedReader(
+                    new InputStreamReader(engineP.getInputStream())
+                );
+
+                while ((line = engineReader.readLine()) != null) {
+                    String l = line;
+                    SwingUtilities.invokeLater(() -> rawOutput.append(l + "\n"));
+                }
+
+                engineP.waitFor();
+                log("SUCCESS", "Scan completed for " + selectedInterface);
+
+            } catch (Exception ex) {
+                log("ERROR", ex.getMessage());
+                SwingUtilities.invokeLater(() -> 
+                    rawOutput.append("\nERROR: " + ex.getMessage() + "\n")
+                );
+            }
+        }).start();
+    }
+
+    static void parseAndDisplayData(String json, JTextArea overview, JTextArea interfaces,
+                                   JTextArea ports, JTextArea services, JTextArea wifi,
+                                   JTextArea connections, JTextArea findings) {
+        try {
+            // Parse Overview
+            int ifaceCount = countMatches(json, "\"is_up\": true");
+            int portCount = countMatches(json, "\"type\": \"risky_port\"");
+            int suspiciousConns = countMatches(json, "\"type\": \"suspicious_connection\"");
+            boolean firewallEnabled = json.contains("\"firewall_enabled\": true");
+            
+            StringBuilder overviewText = new StringBuilder();
+            overviewText.append("=========================================\n");
+            overviewText.append("     NETWORK SECURITY OVERVIEW\n");
+            overviewText.append("=========================================\n\n");
+            overviewText.append(String.format("Active Interfaces:      %d\n", ifaceCount));
+            overviewText.append(String.format("Open Ports:             %d\n", portCount));
+            overviewText.append(String.format("Suspicious Connections: %d\n", suspiciousConns));
+            overviewText.append(String.format("Firewall Status:        %s\n\n", 
+                firewallEnabled ? "[OK] ENABLED" : "[X] DISABLED"));
+            
+            if (!firewallEnabled) {
+                overviewText.append("[!] WARNING: Windows Firewall is DISABLED!\n");
+                overviewText.append("    This is a CRITICAL security risk.\n\n");
+            }
+            
+            if (portCount > 0) {
+                overviewText.append(String.format("[!] %d risky ports detected\n", portCount));
+            }
+            
+            if (suspiciousConns > 5) {
+                overviewText.append(String.format("[!] %d suspicious connections found\n", suspiciousConns));
+            }
+            
+            overview.setText(overviewText.toString());
+            
+            // Parse Network Interfaces
+            parseInterfaces(json, interfaces);
+            
+            // Parse Open Ports
+            parsePorts(json, ports);
+            
+            // Parse Services
+            parseServices(json, services);
+            
+            // Parse WiFi
+            parseWiFi(json, wifi);
+            
+            // Parse Connections
+            parseConnections(json, connections);
+            
+            // Parse Findings
+            parseFindings(json, findings);
+            
+        } catch (Exception e) {
+            overview.setText("Error parsing data: " + e.getMessage());
+        }
+    }
+
+    static int countMatches(String text, String pattern) {
+        int count = 0;
+        int index = 0;
+        while ((index = text.indexOf(pattern, index)) != -1) {
+            count++;
+            index += pattern.length();
+        }
+        return count;
+    }
+
+    static void parseInterfaces(String json, JTextArea output) {
+        StringBuilder text = new StringBuilder();
+        text.append("=========================================\n");
+        text.append("     NETWORK INTERFACES\n");
+        text.append("=========================================\n\n");
+        
+        int start = json.indexOf("\"interfaces\": [");
+        if (start == -1) {
+            output.setText("No interface data found");
+            return;
+        }
+        
+        int ifaceNum = 1;
+        int pos = start;
+        while (true) {
+            int nameStart = json.indexOf("\"name\": \"", pos);
+            if (nameStart == -1 || nameStart > json.indexOf("]", start)) break;
+            nameStart += 9;
+            int nameEnd = json.indexOf("\"", nameStart);
+            String name = json.substring(nameStart, nameEnd);
+            
+            String ipv4 = extractValue(json, "\"ipv4\": \"", nameStart);
+            String mac = extractValue(json, "\"mac\": \"", nameStart);
+            String isUp = extractValue(json, "\"is_up\": ", nameStart);
+            String isWireless = extractValue(json, "\"is_wireless\": ", nameStart);
+            
+            text.append(String.format("Interface #%d\n", ifaceNum++));
+            text.append(String.format("  Name:       %s\n", name));
+            text.append(String.format("  IP Address: %s\n", ipv4.isEmpty() ? "N/A" : ipv4));
+            text.append(String.format("  MAC:        %s\n", mac.isEmpty() ? "N/A" : mac));
+            text.append(String.format("  Status:     %s\n", isUp.equals("true") ? "[OK] UP" : "[X] DOWN"));
+            text.append(String.format("  Type:       %s\n", isWireless.equals("true") ? "Wireless" : "Wired"));
+            text.append("\n");
+            
+            pos = nameEnd;
+        }
+        
+        output.setText(text.toString());
+    }
+
+    static void parsePorts(String json, JTextArea output) {
+        StringBuilder text = new StringBuilder();
+        text.append("=========================================\n");
+        text.append("     OPEN PORTS & SERVICES\n");
+        text.append("=========================================\n\n");
+        
+        int count = 1;
+        int pos = 0;
+        while (true) {
+            int findingStart = json.indexOf("\"type\": \"risky_port\"", pos);
+            if (findingStart == -1) break;
+            
+            String port = extractValue(json, "\"port\": ", findingStart);
+            String service = extractValue(json, "\"service\": \"", findingStart);
+            String binding = extractValue(json, "\"binding\": \"", findingStart);
+            String riskLevel = extractValue(json, "\"risk_level\": \"", findingStart);
+            
+            text.append(String.format("[%d] Port %s - %s\n", count++, port, service));
+            text.append(String.format("    Binding:    %s\n", binding));
+            text.append(String.format("    Risk Level: %s %s\n", getRiskTag(riskLevel), riskLevel.toUpperCase()));
+            text.append("\n");
+            
+            pos = findingStart + 20;
+        }
+        
+        if (count == 1) {
+            text.append("[OK] No risky ports detected\n");
+        }
+        
+        output.setText(text.toString());
+    }
+
+    static void parseServices(String json, JTextArea output) {
+        output.setText("Services analysis will be displayed here...\n(Implementation in progress)");
+    }
+
+    static void parseWiFi(String json, JTextArea output) {
+        StringBuilder text = new StringBuilder();
+        text.append("=========================================\n");
+        text.append("     WiFi SECURITY ANALYSIS\n");
+        text.append("=========================================\n\n");
+        
+        int pos = 0;
+        boolean foundWifi = false;
+        while (true) {
+            int wifiStart = json.indexOf("\"is_wireless\": true", pos);
+            if (wifiStart == -1) break;
+            
+            foundWifi = true;
+            String name = extractValue(json, "\"name\": \"", wifiStart - 200);
+            String ipv4 = extractValue(json, "\"ipv4\": \"", wifiStart);
+            
+            text.append(String.format("WiFi Interface: %s\n", name));
+            text.append(String.format("  IP Address: %s\n", ipv4));
+            text.append("  Encryption: (Available in next update)\n");
+            text.append("  Signal:     (Available in next update)\n");
+            text.append("  SSID:       (Available in next update)\n\n");
+            
+            pos = wifiStart + 20;
+        }
+        
+        if (!foundWifi) {
+            text.append("[i] No active WiFi interfaces detected\n");
+        }
+        
+        output.setText(text.toString());
+    }
+
+    static void parseConnections(String json, JTextArea output) {
+        StringBuilder text = new StringBuilder();
+        text.append("=========================================\n");
+        text.append("     ACTIVE CONNECTIONS\n");
+        text.append("=========================================\n\n");
+        
+        int suspicious = countMatches(json, "\"type\": \"suspicious_connection\"");
+        text.append(String.format("Suspicious Connections: %d\n\n", suspicious));
+        
+        if (suspicious > 0) {
+            text.append("[!] Potentially malicious activity detected!\n");
+            text.append("    Review connections in Security Findings tab\n");
+        } else {
+            text.append("[OK] No suspicious connections detected\n");
+        }
+        
+        output.setText(text.toString());
+    }
+
+    static void parseFindings(String json, JTextArea output) {
+        StringBuilder text = new StringBuilder();
+        text.append("=========================================\n");
+        text.append("     SECURITY FINDINGS\n");
+        text.append("=========================================\n\n");
+        
+        boolean firewallEnabled = json.contains("\"firewall_enabled\": true");
+        if (!firewallEnabled) {
+            text.append("[CRITICAL] Firewall Disabled\n");
+            text.append("  >> Enable Windows Firewall immediately\n\n");
+        }
+        
+        int riskyPorts = countMatches(json, "\"type\": \"risky_port\"");
+        if (riskyPorts > 0) {
+            text.append(String.format("[HIGH] %d Risky Ports Exposed\n", riskyPorts));
+            text.append("  >> See 'Open Ports' tab for details\n\n");
+        }
+        
+        int suspicious = countMatches(json, "\"type\": \"suspicious_connection\"");
+        if (suspicious > 10) {
+            text.append(String.format("[MEDIUM] %d Suspicious Connections\n", suspicious));
+            text.append("  >> Monitor network traffic for malware\n\n");
+        }
+        
+        output.setText(text.toString());
+    }
+
+    static String extractValue(String json, String key, int startPos) {
+        int start = json.indexOf(key, startPos);
+        if (start == -1 || start > startPos + 1000) return "";
+        start += key.length();
+        int end = json.indexOf(key.contains("\"") ? "\"" : ",", start);
+        if (end == -1) end = json.indexOf("}", start);
+        return json.substring(start, end).trim();
+    }
+
+    static String getRiskTag(String risk) {
+        return switch (risk.toLowerCase()) {
+            case "critical" -> "[CRIT]";
+            case "high" -> "[HIGH]";
+            case "medium" -> "[MED]";
+            case "low" -> "[LOW]";
+            default -> "[i]";
+        };
+    }
+    // ---------------- LOAD NETWORK INTERFACES ----------------
+    static void loadNetworkInterfaces(JComboBox<String> combo) {
+        log("INFO", "Loading network interfaces...");
+        combo.removeAllItems();
+        
+        new Thread(() -> {
+            try {
                 ProcessBuilder pb = new ProcessBuilder(
-                        "C:\\ShieldX\\services\\misconfig\\bin\\shieldx_c.exe"
+                    "C:\\ShieldX\\services\\misconfig\\collectors\\c\\shieldx-collector.exe",
+                    "-m", "network",
+                    "-o", "C:\\ShieldX\\temp_interfaces.json"
                 );
                 pb.redirectErrorStream(true);
                 Process p = pb.start();
+                p.waitFor();
+                
+                // Read the JSON output
+                java.nio.file.Path path = java.nio.file.Paths.get("C:\\ShieldX\\temp_interfaces.json");
+                String content = new String(java.nio.file.Files.readAllBytes(path));
+                
+                // Parse JSON to extract interfaces (simple parsing)
+                List<String> interfaces = parseInterfaces(content);
+                
+                SwingUtilities.invokeLater(() -> {
+                    for (String iface : interfaces) {
+                        combo.addItem(iface);
+                    }
+                    if (combo.getItemCount() > 0) {
+                        combo.setSelectedIndex(0);
+                        log("SUCCESS", "Loaded " + interfaces.size() + " network interfaces");
+                    } else {
+                        log("WARNING", "No interfaces found");
+                    }
+                });
+                
+            } catch (Exception ex) {
+                log("ERROR", "Failed to load interfaces: " + ex.getMessage());
+            }
+        }).start();
+    }
+    
+    // Simple JSON parser for interfaces
+    static List<String> parseInterfaces(String json) {
+        List<String> interfaces = new ArrayList<>();
+        
+        try {
+            // Find the "interfaces" array in JSON
+            int interfacesStart = json.indexOf("\"interfaces\": [");
+            if (interfacesStart == -1) {
+                interfaces.add("All Interfaces (Default)");
+                return interfaces;
+            }
+            
+            // Extract interface objects
+            int currentPos = interfacesStart;
+            while (true) {
+                int nameStart = json.indexOf("\"name\": \"", currentPos);
+                if (nameStart == -1) break;
+                nameStart += 9; // Length of "\"name\": \""
+                int nameEnd = json.indexOf("\"", nameStart);
+                String name = json.substring(nameStart, nameEnd);
+                
+                // Find IPv4 address
+                int ipv4Start = json.indexOf("\"ipv4\": \"", nameStart);
+                String ipv4 = "";
+                if (ipv4Start != -1 && ipv4Start < json.indexOf("}", nameStart)) {
+                    ipv4Start += 9;
+                    int ipv4End = json.indexOf("\"", ipv4Start);
+                    ipv4 = json.substring(ipv4Start, ipv4End);
+                }
+                
+                // Find is_up status
+                int isUpPos = json.indexOf("\"is_up\": ", nameStart);
+                boolean isUp = false;
+                if (isUpPos != -1 && isUpPos < json.indexOf("}", nameStart)) {
+                    isUp = json.substring(isUpPos + 9, isUpPos + 13).equals("true");
+                }
+                
+                // Only add interfaces that are UP and have an IP
+                if (isUp && ipv4 != null && !ipv4.isEmpty()) {
+                    String displayName = name + " - " + ipv4;
+                    interfaces.add(displayName);
+                }
+                
+                currentPos = nameEnd + 1;
+                
+                // Check if we've reached the end of interfaces array
+                int nextBracket = json.indexOf("]", currentPos);
+                int nextComma = json.indexOf(",", currentPos);
+                if (nextComma == -1 || nextBracket < nextComma) {
+                    break;
+                }
+            }
+            
+        } catch (Exception e) {
+            System.err.println("Error parsing interfaces: " + e.getMessage());
+        }
+        
+        if (interfaces.isEmpty()) {
+            interfaces.add("All Interfaces (Default)");
+        }
+        
+        return interfaces;
+    }
 
-                BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(p.getInputStream())
+    // ---------------- RUN SCANS ----------------
+    static void runMisconfigScan(String selectedInterface, JTextArea output) {
+        log("INFO", "Running Misconfig scan on: " + selectedInterface);
+        output.setText("Scanning interface: " + selectedInterface + "\n\n");
+
+        new Thread(() -> {
+            try {
+                // First run C collector to get fresh data
+                ProcessBuilder collectorPb = new ProcessBuilder(
+                    "C:\\ShieldX\\services\\misconfig\\collectors\\c\\shieldx-collector.exe",
+                    "-m", "network",
+                    "-o", "C:\\ShieldX\\services\\misconfig\\engine\\state.json",
+                    "-v"
+                );
+                collectorPb.redirectErrorStream(true);
+                Process collectorP = collectorPb.start();
+                
+                BufferedReader collectorReader = new BufferedReader(
+                    new InputStreamReader(collectorP.getInputStream())
+                );
+                
+                String line;
+                while ((line = collectorReader.readLine()) != null) {
+                    String l = line;
+                    SwingUtilities.invokeLater(() -> output.append("[C Collector] " + l + "\n"));
+                }
+                
+                collectorP.waitFor();
+                
+                SwingUtilities.invokeLater(() -> output.append("\n--- Running Rust Analysis Engine ---\n\n"));
+                
+                // Then run Rust engine on the collected data
+                ProcessBuilder enginePb = new ProcessBuilder(
+                    "C:\\ShieldX\\services\\misconfig\\engine\\target\\release\\shieldx-engine.exe",
+                    "C:\\ShieldX\\services\\misconfig\\engine\\state.json"
+                );
+                enginePb.redirectErrorStream(true);
+                Process engineP = enginePb.start();
+
+                BufferedReader engineReader = new BufferedReader(
+                    new InputStreamReader(engineP.getInputStream())
                 );
 
-                String line;
-                while ((line = reader.readLine()) != null) {
+                while ((line = engineReader.readLine()) != null) {
                     String l = line;
                     SwingUtilities.invokeLater(() -> output.append(l + "\n"));
                 }
 
-                p.waitFor();
-                log("SUCCESS", "Misconfig scan completed");
+                engineP.waitFor();
+                log("SUCCESS", "Misconfig scan completed for " + selectedInterface);
 
             } catch (Exception ex) {
                 log("ERROR", ex.getMessage());
+                SwingUtilities.invokeLater(() -> 
+                    output.append("\nERROR: " + ex.getMessage() + "\n")
+                );
             }
         }).start();
     }
@@ -268,6 +817,7 @@ public class Main {
         }).start();
     }
 
+    // ---------------- LOG PANEL ----------------
     static JPanel logPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(BG_PANEL);
@@ -292,6 +842,7 @@ public class Main {
         return panel;
     }
 
+    // ---------------- UTILITIES ----------------
     static void attachContextMenu(JTextComponent c) {
         JPopupMenu menu = new JPopupMenu();
 
