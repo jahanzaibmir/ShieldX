@@ -51,7 +51,7 @@ git clone  https://github.com/jahanzaibmir/ShieldX
 -(RUST)
 cd ShieldX/services/misconfig/engine
 
-make
+cargo build --release
 
 -(C)
 cd ShieldX/services/misconfig/collectors/c
