@@ -25,8 +25,137 @@ public class Main {
 
     static JTextPane logPane;
     static JPanel topPanel;
+    
+    // *** DYNAMIC PATH DETECTION - WORKS ON ANY DRIVE! ***
+    private static final String PROJECT_ROOT = findProjectRoot();
+    private static final String COLLECTOR_EXE = PROJECT_ROOT + "\\services\\misconfig\\collectors\\c\\shieldx-collector.exe";
+    private static final String ENGINE_EXE = PROJECT_ROOT + "\\services\\misconfig\\engine\\target\\release\\shieldx-engine.exe";
+    private static final String STATE_JSON = PROJECT_ROOT + "\\services\\misconfig\\engine\\state.json";
+    private static final String PHISHING_DIR = PROJECT_ROOT + "\\services\\phishing";
+    private static final String TEMP_INTERFACES = PROJECT_ROOT + "\\temp_interfaces.json";
+    
+    /**
+     * Automatically find ShieldX project root directory
+     * Works on ANY drive (C:, D:, E:, etc.)
+     */
+    private static String findProjectRoot() {
+        try {
+            // Method 1: Get location of running .class file
+            String classPath = Main.class.getProtectionDomain().getCodeSource().getLocation().getPath();
+            File classFile = new File(classPath);
+            
+            // Decode URL encoding (spaces become %20, etc.)
+            classPath = java.net.URLDecoder.decode(classPath, "UTF-8");
+            
+            // Remove leading "/" from Windows paths (e.g., "/C:/..." -> "C:/...")
+            if (classPath.startsWith("/") && classPath.contains(":")) {
+                classPath = classPath.substring(1);
+            }
+            
+            File current = new File(classPath);
+            
+            // Navigate up from wherever we are to find ShieldX root
+            // Look for marker files/folders that indicate project root
+            while (current != null && current.getParentFile() != null) {
+                File parent = current.getParentFile();
+                
+                // Check if this is ShieldX root (contains "services" directory)
+                File servicesDir = new File(parent, "services");
+                File misconfigDir = new File(servicesDir, "misconfig");
+                
+                if (servicesDir.exists() && misconfigDir.exists()) {
+                    String rootPath = parent.getAbsolutePath();
+                    System.out.println("[ShieldX] Project root detected: " + rootPath);
+                    return rootPath;
+                }
+                
+                current = parent;
+            }
+            
+            // Method 2: Check current working directory
+            String userDir = System.getProperty("user.dir");
+            File workDir = new File(userDir);
+            
+            // Check if CWD is ShieldX root
+            if (new File(workDir, "services\\misconfig").exists()) {
+                System.out.println("[ShieldX] Using working directory: " + userDir);
+                return userDir;
+            }
+            
+            // Check if CWD is inside ShieldX (go up to find root)
+            current = workDir;
+            while (current != null && current.getParentFile() != null) {
+                File servicesDir = new File(current, "services");
+                if (servicesDir.exists() && new File(servicesDir, "misconfig").exists()) {
+                    System.out.println("[ShieldX] Found root from CWD: " + current.getAbsolutePath());
+                    return current.getAbsolutePath();
+                }
+                current = current.getParentFile();
+            }
+            
+            // Method 3: Fallback - ask user
+            System.err.println("[ShieldX] Could not auto-detect project root!");
+            System.err.println("[ShieldX] Please run from ShieldX directory or set SHIELDX_HOME");
+            
+            // Try environment variable as last resort
+            String envRoot = System.getenv("SHIELDX_HOME");
+            if (envRoot != null && new File(envRoot, "services\\misconfig").exists()) {
+                System.out.println("[ShieldX] Using SHIELDX_HOME: " + envRoot);
+                return envRoot;
+            }
+            
+            // Ultimate fallback - show dialog
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Select ShieldX Root Directory");
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            
+            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                String selected = chooser.getSelectedFile().getAbsolutePath();
+                System.out.println("[ShieldX] User selected: " + selected);
+                return selected;
+            }
+            
+            throw new RuntimeException("Could not determine ShieldX project root directory!");
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Last ditch effort - assume C:\ShieldX
+            System.err.println("[ShieldX] ERROR: Falling back to C:\\ShieldX");
+            return "C:\\ShieldX";
+        }
+    }
+    
+    /**
+     * Verify all required paths exist on startup
+     */
+    private static void verifyPaths() {
+        System.out.println("\n=== ShieldX Path Configuration ===");
+        System.out.println("Project Root: " + PROJECT_ROOT);
+        System.out.println("C Collector:  " + COLLECTOR_EXE);
+        System.out.println("Rust Engine:  " + ENGINE_EXE);
+        System.out.println("Phishing Dir: " + PHISHING_DIR);
+        System.out.println("==================================\n");
+        
+        // Check if critical files exist
+        if (!new File(COLLECTOR_EXE).exists()) {
+            System.err.println("[WARNING] Collector not found: " + COLLECTOR_EXE);
+            System.err.println("          Please compile the C collector first!");
+        }
+        
+        if (!new File(ENGINE_EXE).exists()) {
+            System.err.println("[WARNING] Engine not found: " + ENGINE_EXE);
+            System.err.println("          Please compile the Rust engine first!");
+        }
+        
+        if (!new File(PHISHING_DIR).exists()) {
+            System.err.println("[WARNING] Phishing module not found: " + PHISHING_DIR);
+        }
+    }
 
     public static void main(String[] args) {
+        // Verify paths on startup
+        verifyPaths();
+        
         SwingUtilities.invokeLater(Main::createUI);
     }
 
@@ -63,7 +192,7 @@ public class Main {
         about.addActionListener(e ->
                 JOptionPane.showMessageDialog(
                         frame,
-                        "ShieldX\n An Enterprise SOC Platform\nVersion 1.0\n 2026\n Developed By JAHANZAIB ASHRAF MIR",
+                        "ShieldX\n An Enterprise SOC Platform\nVersion 2.0\n 2026\n Developed By JAHANZAIB ASHRAF MIR",
                         "About ShieldX",
                         JOptionPane.INFORMATION_MESSAGE
                 )
@@ -102,6 +231,7 @@ public class Main {
         frame.setVisible(true);
 
         log("INFO", "ShieldX initialized");
+        log("INFO", "Project root: " + PROJECT_ROOT);
     }
 
     static JButton sidebarButton(String text, Runnable action) {
@@ -311,11 +441,11 @@ public class Main {
 
         new Thread(() -> {
             try {
-                // First run C collector
+                // *** FIXED: Use dynamic paths ***
                 ProcessBuilder collectorPb = new ProcessBuilder(
-                    "C:\\ShieldX\\services\\misconfig\\collectors\\c\\shieldx-collector.exe",
+                    COLLECTOR_EXE,
                     "-m", "network",
-                    "-o", "C:\\ShieldX\\services\\misconfig\\engine\\state.json",
+                    "-o", STATE_JSON,
                     "-v"
                 );
                 collectorPb.redirectErrorStream(true);
@@ -336,9 +466,8 @@ public class Main {
                 collectorP.waitFor();
                 
                 // Parse the JSON output
-                String jsonPath = "C:\\ShieldX\\services\\misconfig\\engine\\state.json";
                 String jsonContent = new String(java.nio.file.Files.readAllBytes(
-                    java.nio.file.Paths.get(jsonPath)));
+                    java.nio.file.Paths.get(STATE_JSON)));
                 
                 // Parse and display organized data
                 SwingUtilities.invokeLater(() -> {
@@ -350,8 +479,8 @@ public class Main {
                 SwingUtilities.invokeLater(() -> rawOutput.append("\n--- Running Analysis Engine ---\n\n"));
                 
                 ProcessBuilder enginePb = new ProcessBuilder(
-                    "C:\\ShieldX\\services\\misconfig\\engine\\target\\release\\shieldx-engine.exe",
-                    jsonPath
+                    ENGINE_EXE,
+                    STATE_JSON
                 );
                 enginePb.redirectErrorStream(true);
                 Process engineP = enginePb.start();
@@ -617,6 +746,7 @@ public class Main {
             default -> "[i]";
         };
     }
+    
     // ---------------- LOAD NETWORK INTERFACES ----------------
     static void loadNetworkInterfaces(JComboBox<String> combo) {
         log("INFO", "Loading network interfaces...");
@@ -624,17 +754,18 @@ public class Main {
         
         new Thread(() -> {
             try {
+                // *** FIXED: Use dynamic paths ***
                 ProcessBuilder pb = new ProcessBuilder(
-                    "C:\\ShieldX\\services\\misconfig\\collectors\\c\\shieldx-collector.exe",
+                    COLLECTOR_EXE,
                     "-m", "network",
-                    "-o", "C:\\ShieldX\\temp_interfaces.json"
+                    "-o", TEMP_INTERFACES
                 );
                 pb.redirectErrorStream(true);
                 Process p = pb.start();
                 p.waitFor();
                 
                 // Read the JSON output
-                java.nio.file.Path path = java.nio.file.Paths.get("C:\\ShieldX\\temp_interfaces.json");
+                java.nio.file.Path path = java.nio.file.Paths.get(TEMP_INTERFACES);
                 String content = new String(java.nio.file.Files.readAllBytes(path));
                 
                 // Parse JSON to extract interfaces (simple parsing)
@@ -729,11 +860,11 @@ public class Main {
 
         new Thread(() -> {
             try {
-                // First run C collector to get fresh data
+                // *** FIXED: Use dynamic paths ***
                 ProcessBuilder collectorPb = new ProcessBuilder(
-                    "C:\\ShieldX\\services\\misconfig\\collectors\\c\\shieldx-collector.exe",
+                    COLLECTOR_EXE,
                     "-m", "network",
-                    "-o", "C:\\ShieldX\\services\\misconfig\\engine\\state.json",
+                    "-o", STATE_JSON,
                     "-v"
                 );
                 collectorPb.redirectErrorStream(true);
@@ -755,8 +886,8 @@ public class Main {
                 
                 // Then run Rust engine on the collected data
                 ProcessBuilder enginePb = new ProcessBuilder(
-                    "C:\\ShieldX\\services\\misconfig\\engine\\target\\release\\shieldx-engine.exe",
-                    "C:\\ShieldX\\services\\misconfig\\engine\\state.json"
+                    ENGINE_EXE,
+                    STATE_JSON
                 );
                 enginePb.redirectErrorStream(true);
                 Process engineP = enginePb.start();
@@ -793,8 +924,9 @@ public class Main {
 
         new Thread(() -> {
             try {
+                // *** FIXED: Use dynamic path ***
                 ProcessBuilder pb = new ProcessBuilder("python", "checker.py", url);
-                pb.directory(new File("C:\\ShieldX\\services\\phishing"));
+                pb.directory(new File(PHISHING_DIR));
                 pb.redirectErrorStream(true);
 
                 Process p = pb.start();
