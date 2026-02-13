@@ -33,8 +33,6 @@ Scans the system and connected network to detect open ports, exposed services, a
 
 - GCC or MinGW-w64
 
-- Administrator privileges for some modules
-
 - Pyhton Requirements ; 
 
 requests
@@ -48,11 +46,17 @@ pyhton-whois
 
 git clone  https://github.com/jahanzaibmir/ShieldX
 
-cd ShieldX/
-
 # Compile 
+(RUST)
+cd ShieldX/services/misconfig/engine
+make
 
-cd gui/java/src
+(c)
+cd ShieldX/services/misconfig/collectors/c
+make
+
+(UI)
+cd ShieldX/gui/java/src
 
 javac shieldx/ui/Main.java
 
@@ -62,8 +66,7 @@ java shieldx.ui.Main
 
 # Platform Support
 
-ShieldX currently supports Windows systems.
-Some features may require administrative privileges.
+ShieldX is solely Windows based Software.
 
 
 # Project Status
