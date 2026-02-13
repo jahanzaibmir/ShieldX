@@ -7,3 +7,19 @@ target/
 bin/
 dist/
 .env
+# Rust / Cargo
+target/
+Cargo.lock
+
+
+# C/C++ build outputs
+bin/
+*.exe
+*.o
+*.obj
+
+# IDE / OS files
+*.log
+*.DS_Store
+*.vscode/
+*.idea/
