@@ -14,6 +14,9 @@ Analyzes URLs to identify suspicious or potentially malicious links commonly use
 
 Scans the system and connected network to detect open ports, exposed services, and insecure configurations that increase attack surface.
 
+ - Malware Analysis
+
+This module examines suspicious files to uncover hidden behavior and threat indicators. It gives analysts real insight into what a file can do, not just whether it’s malicious.
 
 # System Requirements
 
