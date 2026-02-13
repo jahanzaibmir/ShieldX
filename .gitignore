@@ -12,7 +12,7 @@ target/
 Cargo.lock
 
 
-# C/C++ build outputs
+# C outputs
 bin/
 *.exe
 *.o
