@@ -202,7 +202,7 @@ public class Main {
         about.addActionListener(e ->
                 JOptionPane.showMessageDialog(
                         frame,
-                        "ShieldX\nAn Enterprise SOC Platform\nVersion 2.0\n2026\nDeveloped By JAHANZAIB ASHRAF MIR",
+                        "ShieldX\nAn Enterprise SOC Platform\nVersion 1.0\n2026\nDeveloped By Jahanzaib Ashraf Mir\n All praise is for Allah",
                         "About ShieldX",
                         JOptionPane.INFORMATION_MESSAGE
                 )
