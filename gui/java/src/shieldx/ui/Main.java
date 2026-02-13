@@ -21,6 +21,7 @@ public class Main {
     static final Color SUCCESS = new Color(0x2ECC71);
     static final Color ERROR = new Color(0xFF6B6B);
     static final Color INFO = new Color(0x4DA3FF);
+    static final Color WARNING = new Color(0xFFB74D);
     static final Color PLACEHOLDER = new Color(120, 120, 120);
 
     static JTextPane logPane;
@@ -32,6 +33,7 @@ public class Main {
     private static final String ENGINE_EXE = PROJECT_ROOT + "\\services\\misconfig\\engine\\target\\release\\shieldx-engine.exe";
     private static final String STATE_JSON = PROJECT_ROOT + "\\services\\misconfig\\engine\\state.json";
     private static final String PHISHING_DIR = PROJECT_ROOT + "\\services\\phishing";
+    private static final String MALWARE_DIR = PROJECT_ROOT + "\\services\\malware";
     private static final String TEMP_INTERFACES = PROJECT_ROOT + "\\temp_interfaces.json";
     
     /**
@@ -134,6 +136,7 @@ public class Main {
         System.out.println("C Collector:  " + COLLECTOR_EXE);
         System.out.println("Rust Engine:  " + ENGINE_EXE);
         System.out.println("Phishing Dir: " + PHISHING_DIR);
+        System.out.println("Malware Dir:  " + MALWARE_DIR);
         System.out.println("==================================\n");
         
         // Check if critical files exist
@@ -149,6 +152,10 @@ public class Main {
         
         if (!new File(PHISHING_DIR).exists()) {
             System.err.println("[WARNING] Phishing module not found: " + PHISHING_DIR);
+        }
+        
+        if (!new File(MALWARE_DIR).exists()) {
+            System.err.println("[INFO] Malware module directory will be created on first use");
         }
     }
 
@@ -184,15 +191,18 @@ public class Main {
         phishing.addActionListener(e -> phishingUI());
         JMenuItem misconfig = new JMenuItem("Misconfig");
         misconfig.addActionListener(e -> misconfigUI());
+        JMenuItem malware = new JMenuItem("Malware Analysis");
+        malware.addActionListener(e -> malwareUI());
         tools.add(phishing);
         tools.add(misconfig);
+        tools.add(malware);
 
         JMenu help = new JMenu("Help");
         JMenuItem about = new JMenuItem("About ShieldX");
         about.addActionListener(e ->
                 JOptionPane.showMessageDialog(
                         frame,
-                        "ShieldX\n An Enterprise SOC Platform\nVersion 2.0\n 2026\n Developed By JAHANZAIB ASHRAF MIR",
+                        "ShieldX\nAn Enterprise SOC Platform\nVersion 2.0\n2026\nDeveloped By JAHANZAIB ASHRAF MIR",
                         "About ShieldX",
                         JOptionPane.INFORMATION_MESSAGE
                 )
@@ -213,7 +223,7 @@ public class Main {
 
         sidebar.add(sidebarButton("Phishing", Main::phishingUI));
         sidebar.add(sidebarButton("Misconfig", Main::misconfigUI));
-        sidebar.add(sidebarButton("Zeroday", () -> log("INFO", "Zeroday module selected")));
+        sidebar.add(sidebarButton("Malware", Main::malwareUI));
 
         frame.add(sidebar, BorderLayout.WEST);
 
@@ -298,6 +308,126 @@ public class Main {
         topPanel.add(new JScrollPane(output), BorderLayout.CENTER);
         topPanel.revalidate();
         topPanel.repaint();
+    }
+
+    // ---------------- MALWARE ANALYSIS PANEL ----------------
+    static void malwareUI() {
+        topPanel.removeAll();
+        topPanel.setLayout(new BorderLayout(20, 20));
+        topPanel.setBorder(BorderFactory.createEmptyBorder(40, 40, 40, 40));
+
+        JLabel title = new JLabel("Malware Analysis");
+        title.setForeground(Color.WHITE);
+        title.setFont(new Font("Inter", Font.BOLD, 26));
+
+        // File selection panel
+        JPanel filePanel = new JPanel(new BorderLayout(10, 10));
+        filePanel.setBackground(BG_MAIN);
+
+        JTextField filePathField = new JTextField("No file selected");
+        filePathField.setEditable(false);
+        filePathField.setForeground(PLACEHOLDER);
+        filePathField.setBackground(BG_PANEL);
+        filePathField.setFont(new Font("Inter", Font.PLAIN, 14));
+        filePathField.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
+
+        JButton browseBtn = new JButton("Browse File");
+        browseBtn.setBackground(INFO);
+        browseBtn.setForeground(Color.WHITE);
+        browseBtn.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            chooser.setDialogTitle("Select File to Analyze");
+            if (chooser.showOpenDialog(topPanel) == JFileChooser.APPROVE_OPTION) {
+                filePathField.setText(chooser.getSelectedFile().getAbsolutePath());
+                filePathField.setForeground(Color.WHITE);
+            }
+        });
+
+        JButton scanBtn = new JButton("Analyze File");
+        scanBtn.setBackground(ACCENT);
+        scanBtn.setForeground(Color.WHITE);
+
+        filePanel.add(filePathField, BorderLayout.CENTER);
+        filePanel.add(browseBtn, BorderLayout.EAST);
+
+        JTextArea output = new JTextArea();
+        output.setEditable(false);
+        output.setFont(new Font("JetBrains Mono", Font.PLAIN, 13));
+        output.setBackground(new Color(10, 14, 18));
+        output.setForeground(Color.WHITE);
+        attachContextMenu(output);
+
+        scanBtn.addActionListener(e -> {
+            String filePath = filePathField.getText();
+            if (filePath.equals("No file selected")) {
+                log("ERROR", "No file selected for analysis");
+                JOptionPane.showMessageDialog(topPanel,
+                    "Please select a file to analyze!",
+                    "No File Selected",
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            runMalwareAnalysis(filePath, output);
+        });
+
+        JPanel top = new JPanel(new BorderLayout(10, 10));
+        top.setBackground(BG_MAIN);
+        top.add(title, BorderLayout.NORTH);
+        top.add(filePanel, BorderLayout.CENTER);
+        top.add(scanBtn, BorderLayout.EAST);
+
+        topPanel.add(top, BorderLayout.NORTH);
+        topPanel.add(new JScrollPane(output), BorderLayout.CENTER);
+        topPanel.revalidate();
+        topPanel.repaint();
+    }
+
+    static void runMalwareAnalysis(String filePath, JTextArea output) {
+        log("INFO", "Running malware analysis on: " + filePath);
+        output.setText("Analyzing file: " + filePath + "\n\n");
+
+        new Thread(() -> {
+            try {
+                File targetFile = new File(filePath);
+                
+                SwingUtilities.invokeLater(() -> {
+                    output.append("=========================================\n");
+                    output.append("     MALWARE ANALYSIS REPORT\n");
+                    output.append("=========================================\n\n");
+                    output.append("File: " + targetFile.getName() + "\n");
+                    output.append("Size: " + targetFile.length() + " bytes\n");
+                    output.append("Path: " + filePath + "\n\n");
+                    output.append("=========================================\n");
+                    output.append("     ANALYSIS IN PROGRESS\n");
+                    output.append("=========================================\n\n");
+                    output.append("[*] Computing file hash...\n");
+                    output.append("[*] Checking file signature...\n");
+                    output.append("[*] Analyzing entropy...\n");
+                    output.append("[*] Scanning for suspicious strings...\n");
+                    output.append("[*] Checking against threat database...\n\n");
+                    output.append("=========================================\n");
+                    output.append("     RESULTS\n");
+                    output.append("=========================================\n\n");
+                    output.append("[INFO] This is a placeholder for the malware analysis module.\n");
+                    output.append("[INFO] Full implementation coming in next update!\n\n");
+                    output.append("Features to be added:\n");
+                    output.append("  - Static analysis (strings, entropy, PE headers)\n");
+                    output.append("  - Dynamic analysis (behavior monitoring)\n");
+                    output.append("  - YARA rule scanning\n");
+                    output.append("  - VirusTotal integration\n");
+                    output.append("  - Sandbox execution\n");
+                    output.append("  - IOC extraction\n\n");
+                });
+
+                log("SUCCESS", "Malware analysis placeholder completed");
+
+            } catch (Exception ex) {
+                log("ERROR", ex.getMessage());
+                SwingUtilities.invokeLater(() ->
+                    output.append("\nERROR: " + ex.getMessage() + "\n")
+                );
+            }
+        }).start();
     }
 
    // ---------------- ENHANCED MISCONFIG PANEL WITH TABS ----------------
@@ -1011,6 +1141,7 @@ public class Main {
         Color c = switch (type) {
             case "ERROR" -> ERROR;
             case "SUCCESS" -> SUCCESS;
+            case "WARNING" -> WARNING;
             default -> INFO;
         };
         StyleConstants.setForeground(style, c);
