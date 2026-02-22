@@ -98,9 +98,7 @@ A build script is included to generate a Windows setup executable for hasle-free
 
 ShieldX_Setup.exe is already provided so you don't need to waste your precious clicks!!!
 
-
-                      OR you can do it manually
-
+                        OR you can do it manually
 
 Double-click the build_installer file and click RUN
 
