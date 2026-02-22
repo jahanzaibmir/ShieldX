@@ -25,19 +25,30 @@ This module examines suspicious files to understand their behavior and possible 
 Windows 10 or newer
 
 Git
+
 Make
+
 PowerShell
+
 Java JDK 17 or newer
+
 Python 3.10 or newer
+
 Rust toolchain including rustc and cargo
+
 GCC or MinGW-w64
 
-Python packages required
+- Python packages required
 
 requests
+
 scapy
+
 psutil
+
 colorama
+
 pyyaml
+
 python-whois
 
