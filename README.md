@@ -89,3 +89,11 @@ javac shieldx/ui/Main.java
 ```bash
 java shieldx.ui.Main
 ```
+
+## INSTALLER USAGE
+
+A build script is included to generate a Windows setup executable for hasle-free use
+
+```bash
+Double-click the build_installer file and click RUN
+```
