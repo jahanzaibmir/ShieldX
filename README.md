@@ -38,6 +38,8 @@ Rust toolchain including rustc and cargo
 
 GCC or MinGW-w64
 
+NSIS (optional)
+
 - Python packages required
 
 requests
@@ -52,3 +54,11 @@ pyyaml
 
 python-whois
 
+
+## INSTALLATION
+
+Clone the repository:
+
+```bash
+Test test
+```
