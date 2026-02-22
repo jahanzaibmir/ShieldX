@@ -63,3 +63,29 @@ Clone the repository:
 git clone https://github.com/jahanzaibmir/ShieldX
 cd ShieldX
 ```
+
+## COMPILATION
+
+- Rust Engine
+```bash
+cd services/misconfig/engine
+cargo build --release
+```
+
+- C
+```bash
+cd services/misconfig/collectors/c
+make
+```
+
+- Java (UI)
+```bash
+cd gui/java/src
+javac shieldx/ui/Main.java
+```
+
+## RUNNING THE APPLICATION 
+
+```bash
+java shieldx.ui.Main
+```
