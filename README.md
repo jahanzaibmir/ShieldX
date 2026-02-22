@@ -60,5 +60,6 @@ python-whois
 Clone the repository:
 
 ```bash
-Test test
+git clone https://github.com/jahanzaibmir/ShieldX
+cd ShieldX
 ```
