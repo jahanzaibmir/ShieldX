@@ -1,11 +1,11 @@
-# ShieldX
+## SHIELDX 
 
 ShieldX is a Windows-based cybersecurity tool built to find security weaknesses and possible threats in real systems.
 
 It is made for learning, research, and defensive security testing. The goal of ShieldX is simple. Give visibility. Show what is exposed. Help understand what could be abused. It is not built as a heavy enterprise product. It is built to understand security from the ground level.
 
 
-# Modules
+## MODULES 
 
 - Phishing Link Detection
 
@@ -20,7 +20,7 @@ This module scans the system and connected network to detect open ports, exposed
 This module examines suspicious files to understand their behavior and possible threat capabilities. It focuses on revealing what a file can do rather than simply labeling it as malicious.
 
 
-#  System Requirements
+## REQUIREMENTS 
 
 Windows 10 or newer
 
@@ -95,5 +95,29 @@ java shieldx.ui.Main
 A build script is included to generate a Windows setup executable for hasle-free use
 
 ```bash
+
+ShieldX_Setup.exe is already provided so you don't need to waste your precious clicks!!!
+
+                      OR you can do it manually
+
 Double-click the build_installer file and click RUN
+
+ShieldX_Setup.exe gets generated
+
 ```
+
+## PLATFORM SUPPORT
+
+ShieldX is supports Windows only
+
+## PROJECT STATUS
+
+ShieldX is under active development.
+Features, detection logic, and performance improvements are continuously being refined.
+Updates are dropped regurarly.
+
+## AUTHOR 
+
+Jahanzaib Ashraf Mir
+
+ShieldX, built with frustration, desire and enthusiasm!!!
