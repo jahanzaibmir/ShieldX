@@ -1,87 +1,43 @@
 # ShieldX
 
-ShieldX is a Windows-based cybersecurity tool built to identify common security threats and system weaknesses in real-world environments.
-It focuses on visibility, misconfiguration awareness, and early threat detection rather than heavy enterprise features.
+ShieldX is a Windows-based cybersecurity tool built to find security weaknesses and possible threats in real systems.
 
-The tool is designed for learning, research, and defensive security testing.
+It is made for learning, research, and defensive security testing. The goal of ShieldX is simple. Give visibility. Show what is exposed. Help understand what could be abused. It is not built as a heavy enterprise product. It is built to understand security from the ground level.
+
 
 # Modules
- - Phishing Link Detection
 
-Analyzes URLs to identify suspicious or potentially malicious links commonly used in phishing attacks.
+- Phishing Link Detection
 
- - Misconfiguration Detection
+This module analyzes URLs and domains to detect phishing attempts. It checks suspicious patterns, domain tricks, TLS problems, and other indicators commonly used in phishing attacks.
 
-Scans the system and connected network to detect open ports, exposed services, and insecure configurations that increase attack surface.
+- Misconfiguration Detection
 
- - Malware Analysis
+This module scans the system and connected network to detect open ports, exposed services, and unsafe configurations. It helps identify weaknesses that increase the attack surface.
 
-This module examines suspicious files to uncover hidden behavior and threat indicators. It gives analysts real insight into what a file can do, not just whether it’s malicious.
+- Malware Analysis
 
-# System Requirements
+This module examines suspicious files to understand their behavior and possible threat capabilities. It focuses on revealing what a file can do rather than simply labeling it as malicious.
 
-- Windows 10 or newer
 
-- Git
+#  System Requirements
 
-- Make
+Windows 10 or newer
 
-- PowerShell
+Git
+Make
+PowerShell
+Java JDK 17 or newer
+Python 3.10 or newer
+Rust toolchain including rustc and cargo
+GCC or MinGW-w64
 
-- Java JDK 17 or newer
-
-- Python 3.10 or newer
-
-- Rust toolchain (rustc and cargo)
-
-- GCC or MinGW-w64
-
-- Pyhton Requirements ; 
+Python packages required
 
 requests
 scapy
 psutil
 colorama
 pyyaml
-pyhton-whois
-
-# How to set up
-
-git clone  https://github.com/jahanzaibmir/ShieldX
-
-# Compile 
-
--(RUST)
-cd ShieldX/services/misconfig/engine
-
-cargo build --release
-
--(C)
-cd ShieldX/services/misconfig/collectors/c
-
-make
-
--(UI)
-
-cd ShieldX/gui/java/src
-
-javac shieldx/ui/Main.java
-
-# Run it
-
-java shieldx.ui.Main
-
-# Platform Support
-
-ShieldX is solely Windows based Software.
-
-
-# Project Status
-
-ShieldX is under active development. I drop the daily updates to make it upto date and you satisfied
-
-# Author
-
-Developed by Jahanzaib Ashraf Mir 
-Built with curiosity, frustration, and a desire to safegaurd systems from outside attacks.
+python-whois
 
