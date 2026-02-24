@@ -38,6 +38,10 @@ Rust toolchain including rustc and cargo
 
 GCC or MinGW-w64
 
+Npcap 
+
+Npcap SDK 
+
 NSIS (optional)
 
 - Python packages required
