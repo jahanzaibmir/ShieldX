@@ -11,9 +11,9 @@ It is made for learning, research, and defensive security testing. The goal of S
 
 This module analyzes URLs and domains to detect phishing attempts. It checks suspicious patterns, domain tricks, TLS problems, and other indicators commonly used in phishing attacks.
 
-- Misconfiguration Detection
+- Network Threat Monitor 
 
-This module scans the system and connected network to detect open ports, exposed services, and unsafe configurations. It helps identify weaknesses that increase the attack surface.
+This module captures and analyzes live network traffic to detect suspicious or unusual behavior. It identifies anomalies such as scanning activity and potential threats  in real time.
 
 - Malware Analysis
 
