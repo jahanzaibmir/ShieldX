@@ -14,9 +14,7 @@ Rust toolchain (rustc and cargo)
 
 GCC or MinGW-w64
 
-Npcap
-
-Npcap SDK 
+NSIS
 
 Administrator privileges for some modules
 
