@@ -44,7 +44,7 @@ def domain_resolves(domain: str) -> bool:
     except (socket.gaierror, UnicodeError):
         return False
 
-# WHOIS Intelligence
+# I added WHOIS tool inteligence
 
 def analyze_whois(domain: str):
     signals = []
