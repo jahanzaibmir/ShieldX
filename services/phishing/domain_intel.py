@@ -21,8 +21,8 @@ def shannon_entropy(data: str) -> float:
 
 def analyze_domain(domain: str):
     """
-    Advanced Domain Intelligence Engine
-    Returns: (risk_score: int, findings: list[str])
+    Domain Intelligence 
+   
     """
 
     score = 0
@@ -58,7 +58,8 @@ def analyze_domain(domain: str):
             findings.append(f"High-risk top-level domain used: {tld}")
             break
 
-    # 2️⃣ Entropy Analysis (DGA detection)
+
+    
     base_label = labels[0]
     entropy = shannon_entropy(base_label)
 
