@@ -1,6 +1,5 @@
 /**
- * ShieldX Enhanced Collectors - Main Entry Point
- * Ultimate SOC-Grade Security Scanner
+ * ShieldX C Collectors
  */
 
 #include <stdio.h>
