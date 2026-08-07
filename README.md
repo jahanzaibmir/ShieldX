@@ -30,11 +30,9 @@ Make
 
 PowerShell
 
-Java JDK 17 or newer
+Dotnet (.NET 10 or newer)
 
 Python 3.10 or newer
-
-Rust toolchain including rustc and cargo
 
 GCC or MinGW-w64
 
