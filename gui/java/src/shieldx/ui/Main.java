@@ -27,7 +27,6 @@ public class Main {
     static JTextPane logPane;
     static JPanel topPanel;
     
-    // *** DYNAMIC PATH DETECTION - WORKS ON ANY DRIVE! ***
     private static final String PROJECT_ROOT = findProjectRoot();
     private static final String COLLECTOR_EXE = PROJECT_ROOT + "\\services\\misconfig\\collectors\\c\\shieldx-collector.exe";
     private static final String ENGINE_EXE = PROJECT_ROOT + "\\services\\misconfig\\engine\\target\\release\\shieldx-engine.exe";
@@ -36,10 +35,7 @@ public class Main {
     private static final String MALWARE_DIR = PROJECT_ROOT + "\\services\\malware";
     private static final String TEMP_INTERFACES = PROJECT_ROOT + "\\temp_interfaces.json";
     
-    /**
-     * Automatically find ShieldX project root directory
-     * Works on ANY drive (C:, D:, E:, etc.)
-     */
+  
     private static String findProjectRoot() {
         try {
             // Method 1: Get location of running .class file
@@ -49,7 +45,7 @@ public class Main {
             // Decode URL encoding (spaces become %20, etc.)
             classPath = java.net.URLDecoder.decode(classPath, "UTF-8");
             
-            // Remove leading "/" from Windows paths (e.g., "/C:/..." -> "C:/...")
+            // Remove leading "/" from Windows paths 
             if (classPath.startsWith("/") && classPath.contains(":")) {
                 classPath = classPath.substring(1);
             }
@@ -61,7 +57,7 @@ public class Main {
             while (current != null && current.getParentFile() != null) {
                 File parent = current.getParentFile();
                 
-                // Check if this is ShieldX root (contains "services" directory)
+                // Check if this is ShieldX root 
                 File servicesDir = new File(parent, "services");
                 File misconfigDir = new File(servicesDir, "misconfig");
                 
@@ -127,9 +123,7 @@ public class Main {
         }
     }
     
-    /**
-     * Verify all required paths exist on startup
-     */
+   
     private static void verifyPaths() {
         System.out.println("\n=== ShieldX Path Configuration ===");
         System.out.println("Project Root: " + PROJECT_ROOT);
@@ -254,7 +248,7 @@ public class Main {
         return btn;
     }
 
-    // ---------------- PHISHING PANEL ----------------
+   
     static void phishingUI() {
         topPanel.removeAll();
         topPanel.setLayout(new BorderLayout(20, 20));
@@ -310,7 +304,6 @@ public class Main {
         topPanel.repaint();
     }
 
-    // ---------------- MALWARE ANALYSIS PANEL ----------------
     static void malwareUI() {
         topPanel.removeAll();
         topPanel.setLayout(new BorderLayout(20, 20));
@@ -391,23 +384,23 @@ public class Main {
                 File targetFile = new File(filePath);
                 
                 SwingUtilities.invokeLater(() -> {
-                    output.append("=========================================\n");
+                    output.append("\n");
                     output.append("     MALWARE ANALYSIS REPORT\n");
-                    output.append("=========================================\n\n");
+                    output.append("\n\n");
                     output.append("File: " + targetFile.getName() + "\n");
                     output.append("Size: " + targetFile.length() + " bytes\n");
                     output.append("Path: " + filePath + "\n\n");
-                    output.append("=========================================\n");
+                    output.append("\n");
                     output.append("     ANALYSIS IN PROGRESS\n");
-                    output.append("=========================================\n\n");
-                    output.append("[*] Computing file hash...\n");
-                    output.append("[*] Checking file signature...\n");
+                    output.append("\n\n");
+                    output.append("[*] Computing file hash\n");
+                    output.append("[*] Checking file signature\n");
                     output.append("[*] Analyzing entropy...\n");
-                    output.append("[*] Scanning for suspicious strings...\n");
-                    output.append("[*] Checking against threat database...\n\n");
-                    output.append("=========================================\n");
+                    output.append("[*] Scanning for suspicious strings\n");
+                    output.append("[*] Checking against threat database\n\n");
+                    output.append("\n");
                     output.append("     RESULTS\n");
-                    output.append("=========================================\n\n");
+                    output.append("\n\n");
                     output.append("[INFO] This is a placeholder for the malware analysis module.\n");
                     output.append("[INFO] Full implementation coming in next update!\n\n");
                     output.append("Features to be added:\n");
@@ -430,7 +423,7 @@ public class Main {
         }).start();
     }
 
-   // ---------------- ENHANCED MISCONFIG PANEL WITH TABS ----------------
+
     static void misconfigUI() {
         topPanel.removeAll();
         topPanel.setLayout(new BorderLayout(20, 20));
@@ -571,7 +564,7 @@ public class Main {
 
         new Thread(() -> {
             try {
-                // *** FIXED: Use dynamic paths ***
+              
                 ProcessBuilder collectorPb = new ProcessBuilder(
                     COLLECTOR_EXE,
                     "-m", "network",
@@ -647,9 +640,9 @@ public class Main {
             boolean firewallEnabled = json.contains("\"firewall_enabled\": true");
             
             StringBuilder overviewText = new StringBuilder();
-            overviewText.append("=========================================\n");
+            overviewText.append("\n");
             overviewText.append("     NETWORK SECURITY OVERVIEW\n");
-            overviewText.append("=========================================\n\n");
+            overviewText.append("\n\n");
             overviewText.append(String.format("Active Interfaces:      %d\n", ifaceCount));
             overviewText.append(String.format("Open Ports:             %d\n", portCount));
             overviewText.append(String.format("Suspicious Connections: %d\n", suspiciousConns));
@@ -706,9 +699,9 @@ public class Main {
 
     static void parseInterfaces(String json, JTextArea output) {
         StringBuilder text = new StringBuilder();
-        text.append("=========================================\n");
+        text.append("\n");
         text.append("     NETWORK INTERFACES\n");
-        text.append("=========================================\n\n");
+        text.append("\n\n");
         
         int start = json.indexOf("\"interfaces\": [");
         if (start == -1) {
@@ -746,9 +739,9 @@ public class Main {
 
     static void parsePorts(String json, JTextArea output) {
         StringBuilder text = new StringBuilder();
-        text.append("=========================================\n");
+        text.append("\n");
         text.append("     OPEN PORTS & SERVICES\n");
-        text.append("=========================================\n\n");
+        text.append("\n\n");
         
         int count = 1;
         int pos = 0;
@@ -782,9 +775,9 @@ public class Main {
 
     static void parseWiFi(String json, JTextArea output) {
         StringBuilder text = new StringBuilder();
-        text.append("=========================================\n");
+        text.append("\n");
         text.append("     WiFi SECURITY ANALYSIS\n");
-        text.append("=========================================\n\n");
+        text.append("\n\n");
         
         int pos = 0;
         boolean foundWifi = false;
@@ -814,9 +807,9 @@ public class Main {
 
     static void parseConnections(String json, JTextArea output) {
         StringBuilder text = new StringBuilder();
-        text.append("=========================================\n");
+        text.append("\n");
         text.append("     ACTIVE CONNECTIONS\n");
-        text.append("=========================================\n\n");
+        text.append("\n\n");
         
         int suspicious = countMatches(json, "\"type\": \"suspicious_connection\"");
         text.append(String.format("Suspicious Connections: %d\n\n", suspicious));
@@ -833,9 +826,9 @@ public class Main {
 
     static void parseFindings(String json, JTextArea output) {
         StringBuilder text = new StringBuilder();
-        text.append("=========================================\n");
+        text.append("\n");
         text.append("     SECURITY FINDINGS\n");
-        text.append("=========================================\n\n");
+        text.append("\n\n");
         
         boolean firewallEnabled = json.contains("\"firewall_enabled\": true");
         if (!firewallEnabled) {
@@ -877,14 +870,14 @@ public class Main {
         };
     }
     
-    // ---------------- LOAD NETWORK INTERFACES ----------------
+    // LOAD NETWORK INTERFACES 
     static void loadNetworkInterfaces(JComboBox<String> combo) {
         log("INFO", "Loading network interfaces...");
         combo.removeAllItems();
         
         new Thread(() -> {
             try {
-                // *** FIXED: Use dynamic paths ***
+              
                 ProcessBuilder pb = new ProcessBuilder(
                     COLLECTOR_EXE,
                     "-m", "network",
@@ -983,14 +976,14 @@ public class Main {
         return interfaces;
     }
 
-    // ---------------- RUN SCANS ----------------
+   
     static void runMisconfigScan(String selectedInterface, JTextArea output) {
         log("INFO", "Running Misconfig scan on: " + selectedInterface);
         output.setText("Scanning interface: " + selectedInterface + "\n\n");
 
         new Thread(() -> {
             try {
-                // *** FIXED: Use dynamic paths ***
+               
                 ProcessBuilder collectorPb = new ProcessBuilder(
                     COLLECTOR_EXE,
                     "-m", "network",
@@ -1054,7 +1047,7 @@ public class Main {
 
         new Thread(() -> {
             try {
-                // *** FIXED: Use dynamic path ***
+               
                 ProcessBuilder pb = new ProcessBuilder("python", "checker.py", url);
                 pb.directory(new File(PHISHING_DIR));
                 pb.redirectErrorStream(true);
@@ -1079,7 +1072,6 @@ public class Main {
         }).start();
     }
 
-    // ---------------- LOG PANEL ----------------
     static JPanel logPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         panel.setBackground(BG_PANEL);
@@ -1104,7 +1096,6 @@ public class Main {
         return panel;
     }
 
-    // ---------------- UTILITIES ----------------
     static void attachContextMenu(JTextComponent c) {
         JPopupMenu menu = new JPopupMenu();
 
